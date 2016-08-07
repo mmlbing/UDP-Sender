@@ -1,10 +1,16 @@
 package com.example.s.udpsender;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -13,56 +19,71 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public class MainActivity extends AppCompatActivity {
-    private Button buttonSend;
-    private EditText editTextIP, editTextPort, editTextTx;
-    private String ipStr, dataStr, portStr;
+    String ipStr, portStr;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        buttonSend = (Button) findViewById(R.id.buttonSend);
-        editTextIP =  (EditText) findViewById(R.id.EditTextIP);
-        editTextPort =  (EditText) findViewById(R.id.EditTextPort);
-        editTextTx =  (EditText) findViewById(R.id.EditTextTx);
-        editTextIP.setText("219.230.110.234");
 
-        buttonSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                boolean readytoSend = true;
-                ipStr = editTextIP.getText().toString();
-                dataStr = editTextTx.getText().toString();
-                portStr = editTextPort.getText().toString();
+        EditText dataSend = (EditText) findViewById(R.id.TxEdit);   //设置EditText的按键监控
+        dataSend.setOnKeyListener(onKey);
 
-                if (!ipStr.matches("([0-9]{1,3}\\.){3}[0-9]{1,3}")) {
-                    Toast.makeText(getApplicationContext(), "Error Address!", Toast.LENGTH_SHORT).show();
-                    readytoSend = false;
-                }
-                if (!portStr.matches("[0-9]{1,5}")) {
-                    Toast.makeText(getApplicationContext(), "Error PortNumber!", Toast.LENGTH_SHORT).show();
-                    readytoSend = false;
-                }
-                if(dataStr.length() < 1) {
-                    Toast.makeText(getApplicationContext(), "Nothing to Send!", Toast.LENGTH_SHORT).show();
-                    readytoSend = false;
-                }
-
-                if(readytoSend) {
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            try {
-                                txUDP(ipStr, Integer.parseInt( portStr ), dataStr);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }.start();
-                    Toast.makeText(getApplicationContext(), "Sent.", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        SharedPreferences read = getSharedPreferences("Setting", MODE_PRIVATE);
+        ipStr = read.getString("IP", "");
+        portStr = read.getString("Port", "");
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity_actionbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_setting:
+                Intent intent = new Intent(this, settingActivity.class); //启动设置界面
+                startActivity(intent);
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
+    View.OnKeyListener onKey = new View.OnKeyListener() {           //按键监控
+       // private long exitTime = 0;
+        @Override
+        public boolean onKey(View v, int keyCode, KeyEvent event) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_ENTER:
+                    if( event.getAction() == KeyEvent.ACTION_DOWN ) {
+                        EditText editTextData = (EditText) findViewById(R.id.TxEdit);
+                        final String dataStr = editTextData.getText().toString();
+                        if (dataStr.length() > 0) {
+                            new Thread() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        txUDP(ipStr, Integer.parseInt(portStr), dataStr);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }.start();
+                            sentDataShowFresh(dataStr);        //刷新已发送数据的显示
+                        } else
+                            Toast.makeText(getApplicationContext(), "No data to send!", Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                default:
+                    return false;
+            }
+        }
+    };
+
     private void txUDP(String destip, int port, String txdata) throws IOException {
         InetAddress address = InetAddress.getByName(destip);
         byte[] data = txdata.getBytes();
@@ -74,5 +95,17 @@ public class MainActivity extends AppCompatActivity {
         socket.send(packet);
         // 5.关闭资源
         socket.close();
+    }
+    private void sentDataShowFresh(String thisData) {
+        TextView sentData = (TextView) findViewById(R.id.dataSentTextView);
+        String oldData = sentData.getText().toString();
+        if(oldData.length() != 0) {
+        oldData = oldData.concat("\n");
+        oldData = oldData.concat(thisData);
+        }
+        else {
+            oldData = thisData;
+        }
+        sentData.setText(oldData);
     }
 }

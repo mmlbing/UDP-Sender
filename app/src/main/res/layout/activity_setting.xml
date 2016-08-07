@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="16dp">
+
+    <TableRow>
+        <TextView
+            android:text="IP:"
+            android:textSize="20sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:selectAllOnFocus="true"
+            android:id="@+id/EditTextIP" />
+
+    </TableRow>
+    <TableRow>
+        <TextView
+            android:text="Port:"
+            android:textSize="20sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <EditText
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:selectAllOnFocus="true"
+            android:id="@+id/EditTextPort" />
+    </TableRow>
+</TableLayout>
+

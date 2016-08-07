@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">UDP Sender</string>
+    <string name="app_versionName">2.0</string>
 </resources>
